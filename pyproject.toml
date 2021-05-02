@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "stratum-watcher"
+version = "0.1.0"
+description = ""
+authors = ["Andrew Chow <achow101-github@achow101.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+black = "^21.4b2"
+mypy = "^0.812"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
