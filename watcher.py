@@ -15,7 +15,7 @@ BUF = b""
 # Setup logging
 file_handler = logging.FileHandler(filename="stratum-watcher.log")
 stdout_handler = logging.StreamHandler(sys.stdout)
-logging.basicConfig(handlers=[file_handler, stdout_handler])
+logging.basicConfig(handlers=[file_handler, stdout_handler], format="%(asctime)s %(levelname)s: %(message)s")
 LOG = logging.getLogger()
 
 
