@@ -79,12 +79,12 @@ def get_stratum_work(url, userpass):
     # Open TCP connection to the server
     stratum_sock = socket.socket()
     stratum_sock.connect((parsed.hostname, parsed.port))
-    LOG.info(f"Connecting to server {url}")
+    LOG.info(f"Connected to server {url}")
 
     # Make sure the socket is closed on exit
     def cleanup_socket():
         stratum_sock.close()
-        LOG.info("Disconnecting from pool")
+        LOG.info("Disconnected from pool")
 
     atexit.register(cleanup_socket)
 
@@ -100,6 +100,16 @@ def get_stratum_work(url, userpass):
     while True:
         n = get_msg(stratum_sock)
         LOG.debug(f"Received notification: {n}")
+
+        # Check the notification for mining.notify
+        if "method" in n and n["method"] == "mining.notify":
+            # Check for taproot versionbits
+            block_ver_hex = n["params"][5]
+            block_ver = int.from_bytes(bytes.fromhex(block_ver_hex), byteorder="big")
+            if block_ver & (1 << 2):
+                LOG.info(f"Pool {parsed.hostname} issued new work that SIGNALS for Taproot")
+            else:
+                LOG.info(f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL for Taproot")
 
 
 parser = argparse.ArgumentParser(
