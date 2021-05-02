@@ -15,7 +15,10 @@ BUF = b""
 # Setup logging
 file_handler = logging.FileHandler(filename="stratum-watcher.log")
 stdout_handler = logging.StreamHandler(sys.stdout)
-logging.basicConfig(handlers=[file_handler, stdout_handler], format="%(asctime)s %(levelname)s: %(message)s")
+logging.basicConfig(
+    handlers=[file_handler, stdout_handler],
+    format="%(asctime)s %(levelname)s: %(message)s",
+)
 LOG = logging.getLogger()
 
 
@@ -107,9 +110,13 @@ def get_stratum_work(url, userpass):
             block_ver_hex = n["params"][5]
             block_ver = int.from_bytes(bytes.fromhex(block_ver_hex), byteorder="big")
             if block_ver & (1 << 2):
-                LOG.info(f"Pool {parsed.hostname} issued new work that SIGNALS for Taproot")
+                LOG.info(
+                    f"Pool {parsed.hostname} issued new work that SIGNALS for Taproot"
+                )
             else:
-                LOG.info(f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL for Taproot")
+                LOG.info(
+                    f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL for Taproot"
+                )
 
 
 parser = argparse.ArgumentParser(
