@@ -115,11 +115,11 @@ def get_stratum_work(url, userpass):
             block_ver = int.from_bytes(bytes.fromhex(block_ver_hex), byteorder="big")
             if block_ver & (1 << 2):
                 LOG.info(
-                    f"Pool {parsed.hostname} issued new work that SIGNALS for Taproot"
+                    f"Pool {parsed.hostname} issued new work that SIGNALS ✅ for Taproot"
                 )
             else:
                 LOG.info(
-                    f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL for Taproot"
+                    f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL ❌ for Taproot"
                 )
 
 
