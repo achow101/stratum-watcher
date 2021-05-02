@@ -87,7 +87,7 @@ def get_stratum_work(url, userpass):
     # Make sure the socket is closed on exit
     def cleanup_socket():
         stratum_sock.close()
-        LOG.info("Disconnected from pool")
+        LOG.info(f"Disconnected from {url}")
 
     atexit.register(cleanup_socket)
 
