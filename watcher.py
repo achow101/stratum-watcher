@@ -2,12 +2,20 @@
 
 import argparse
 import json
+import logging
 import socket
+import sys
 
 from urllib.parse import urlparse
 
 ID = 0
 BUF = b""
+
+# Setup logging
+file_handler = logging.FileHandler(filename="stratum-watcher.log")
+stdout_handler = logging.StreamHandler(sys.stdout)
+logging.basicConfig(handlers=[file_handler, stdout_handler])
+LOG = logging.getLogger()
 
 
 def get_msg(sock):
@@ -44,13 +52,13 @@ def send_jsonrpc(sock, method, params):
     ID += 1
 
     # Send the jsonrpc request
-    print(f"Sending: {data}")
+    LOG.debug(f"Sending: {data}")
     json_data = json.dumps(data) + "\n"
     sock.send(json_data.encode())
 
     # Get the jsonrpc reqponse
     resp = get_msg(sock)
-    print(f"Received: {resp}")
+    LOG.debug(f"Received: {resp}")
 
 
 def get_stratum_work(url, userpass):
@@ -70,20 +78,20 @@ def get_stratum_work(url, userpass):
     # Open TCP connection to the server
     stratum_sock = socket.socket()
     stratum_sock.connect((parsed.hostname, parsed.port))
-    print(f"Connecting to server {url}")
+    LOG.info(f"Connecting to server {url}")
 
     # Subscribe to mining notifications
     send_jsonrpc(stratum_sock, "mining.subscribe", ["StratumWatcher/0.1"])
-    print(f"Subscribed to pool notifications")
+    LOG.debug(f"Subscribed to pool notifications")
 
     # Authorize with the pool
     send_jsonrpc(stratum_sock, "mining.authorize", userpass.split(":"))
-    print(f"Authed with the pool")
+    LOG.debug(f"Authed with the pool")
 
     # Wait for notifications
     while True:
         n = get_msg(stratum_sock)
-        print(f"Received notification: {n}")
+        LOG.debug(f"Received notification: {n}")
 
 
 parser = argparse.ArgumentParser(
@@ -93,6 +101,11 @@ parser.add_argument("url", help="The URL of the stratum server")
 parser.add_argument(
     "userpass", help="Username and password combination separated by a colon (:)"
 )
+parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
 args = parser.parse_args()
+
+# Set logging level
+loglevel = logging.DEBUG if args.debug else logging.INFO
+LOG.setLevel(loglevel)
 
 get_stratum_work(args.url, args.userpass)
