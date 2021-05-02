@@ -101,7 +101,11 @@ def get_stratum_work(url, userpass):
 
     # Wait for notifications
     while True:
-        n = get_msg(stratum_sock)
+        try:
+            n = get_msg(stratum_sock)
+        except Exception as e:
+            LOG.warning(f"Received exception for {parsed.hostname}: {e}")
+            break
         LOG.debug(f"Received notification: {n}")
 
         # Check the notification for mining.notify
@@ -134,7 +138,8 @@ loglevel = logging.DEBUG if args.debug else logging.INFO
 LOG.setLevel(loglevel)
 
 try:
-    get_stratum_work(args.url, args.userpass)
+    while True:
+        get_stratum_work(args.url, args.userpass)
 except KeyboardInterrupt:
     # When receiving a keyboard interrupt, do nothing and let atexit clean things up
     pass
