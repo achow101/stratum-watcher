@@ -17,6 +17,7 @@ POOLS = [
         "bc1qmuf9u75g745955f67c85nd33pdyh4v8zzr2lms.wentaproot:x",
     ],
     ["stratum+tcp://btc.ss.poolin.com:443", "achow101.001:123"],
+    ["stratum+tcp://stratum.btc.top:8888", "achow101.001:123"],
 ]
 
 parser = argparse.ArgumentParser(
