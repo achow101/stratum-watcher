@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import argparse
+import atexit
 import json
 import logging
 import socket
@@ -80,6 +81,13 @@ def get_stratum_work(url, userpass):
     stratum_sock.connect((parsed.hostname, parsed.port))
     LOG.info(f"Connecting to server {url}")
 
+    # Make sure the socket is closed on exit
+    def cleanup_socket():
+        stratum_sock.close()
+        LOG.info("Disconnecting from pool")
+
+    atexit.register(cleanup_socket)
+
     # Subscribe to mining notifications
     send_jsonrpc(stratum_sock, "mining.subscribe", ["StratumWatcher/0.1"])
     LOG.debug(f"Subscribed to pool notifications")
@@ -108,4 +116,8 @@ args = parser.parse_args()
 loglevel = logging.DEBUG if args.debug else logging.INFO
 LOG.setLevel(loglevel)
 
-get_stratum_work(args.url, args.userpass)
+try:
+    get_stratum_work(args.url, args.userpass)
+except KeyboardInterrupt:
+    # When receiving a keyboard interrupt, do nothing and let atexit clean things up
+    pass
