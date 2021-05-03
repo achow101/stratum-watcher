@@ -18,6 +18,8 @@ POOLS = [
     ],
     ["stratum+tcp://btc.ss.poolin.com:443", "achow101.001:123"],
     ["stratum+tcp://stratum.btc.top:8888", "achow101.001:123"],
+    ["stratum+tcp://us1.btc.sigmapool.com:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://btc.luxor.tech:700", "achow101.wentaproot:x"],
 ]
 
 parser = argparse.ArgumentParser(
