@@ -27,6 +27,7 @@ class Watcher(Process):
         self.buf = b""
         self.id = 0
         self.userpass = userpass
+        self.signals = False
 
         # Parse the URL
         self.purl = urlparse(url)
@@ -128,13 +129,23 @@ class Watcher(Process):
                     bytes.fromhex(block_ver_hex), byteorder="big"
                 )
                 if block_ver & (1 << 2):
-                    LOG.info(
+                    if not self.signals:
+                        LOG.info(f"✅ Now signaling: {self.purl.hostname}")
+                    else:
+                        pass
+                    LOG.debug(
                         f"Issued new work that SIGNALS ✅ for Taproot from {self.purl.hostname}"
                     )
+                    self.signals = True
                 else:
-                    LOG.info(
+                    if self.signals:
+                        LOG.info(f"❌ Stopped signaling: {self.purl.hostname}")
+                    else:
+                        pass
+                    LOG.debug(
                         f"Issued new work that DOES NOT SIGNAL ❌ for Taproot from {self.purl.hostname}"
                     )
+                    self.signals = False
 
     def run(self):
         # If there is a socket exception, retry
