@@ -58,7 +58,10 @@ class Watcher(Process):
 
     def get_msg(self):
         while True:
-            self.buf += self.sock.recv(4096)
+            new_buf = self.sock.recv(4096)
+            if len(new_buf) == 0:
+                raise EOFError("Socket EOF received")
+            self.buf += new_buf
             split_buf = self.buf.split(b"\n", maxsplit=1)
             r = split_buf[0]
             try:
