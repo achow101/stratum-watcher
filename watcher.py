@@ -133,27 +133,31 @@ class Watcher(Process):
                 if block_ver & (1 << 2):
                     if self.signals is None:
                         LOG.info(f"✅ Signaling initially: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     elif not self.signals:
                         LOG.info(f"✅ Now signaling: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     elif time.time() - self.last_log_time > 300:
                         LOG.info(f"✅ Still signaling: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     LOG.debug(
                         f"Issued new work that SIGNALS ✅ for Taproot from {self.purl.hostname}"
                     )
                     self.signals = True
-                    self.last_log_time = time.time()
                 else:
                     if self.signals is None:
                         LOG.info(f"❌ Not signaling initially: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     elif self.signals:
                         LOG.info(f"❌ Stopped signaling: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     elif time.time() - self.last_log_time > 300:
                         LOG.info(f"❌ Still not signaling: {self.purl.hostname}")
+                        self.last_log_time = time.time()
                     LOG.debug(
                         f"Issued new work that DOES NOT SIGNAL ❌ for Taproot from {self.purl.hostname}"
                     )
                     self.signals = False
-                    self.last_log_time = time.time()
 
     def run(self):
         # If there is a socket exception, retry
