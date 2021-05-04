@@ -41,6 +41,9 @@ class Watcher(Process):
         if self.purl.path != "":
             raise ValueError(f"URL has a path {self.purl.path}, this is not valid")
 
+        self.init_socket()
+
+    def init_socket(self)
         # Make the socket
         self.sock = socket.socket()
         self.sock.settimeout(600)
@@ -135,6 +138,7 @@ class Watcher(Process):
         while True:
             self.get_stratum_work()
             self.close()
+            self.init_socket()
 
 
 if __name__ == "__main__":
