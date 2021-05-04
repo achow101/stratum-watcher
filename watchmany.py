@@ -34,8 +34,6 @@ POOLS = [
         "bc1qmuf9u75g745955f67c85nd33pdyh4v8zzr2lms.wentaproot:x",
     ],
     ["stratum+tcp://btc.ss.poolin.com:443", "achow101.001:123"],
-    ["stratum+tcp://btc.ss.poolin.com:1883", "achow101.001:123"],
-    ["stratum+tcp://btc.ss.poolin.com:25", "achow101.001:123"],
     ["stratum+tcp://stratum.btc.top:8888", "achow101.001:123"],
     ["stratum+tcp://bak.btc.top:3333", "achow101.001:123"],
     ["stratum+tcp://ru1.btc.sigmapool.com:3333", "achow101.wentaproot:x"],
@@ -51,6 +49,19 @@ POOLS = [
     ["stratum+tcp://btc-us.luxor.tech:6000", "achow101.wentaproot:x"],
     ["stratum+tcp://btc-asia.luxor.tech:6000", "achow101.wentaproot:x"],
     ["stratum+tcp://btc-eu.luxor.tech:6000", "achow101.wentaproot:x"],
+    ["stratum+tcp://bs.poolbinance.com:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://bn.huobipool.com:1800", "achow101.wentaproot:x"],
+    ["stratum+tcp://bs.huobipool.com:1800", "achow101.wentaproot:x"],
+    ["stratum+tcp://stratum.poolhb.com:8888", "achow101.wentaproot:x"],
+    ["stratum+tcp://bm.huobipool.com:1800", "achow101.wentaproot:x"],
+    ["stratum+tcp://bu.huobipool.com:1800", "achow101.wentaproot:x"],
+    ["stratum+tcp://hk.huobipool.com:8888", "achow101.wentaproot:x"],
+    ["stratum+tcp://gate.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://eu.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://cn.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://us.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://ir.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://kz.emcd.io:3333", "achow101.wentaproot:x"],
 ]
 
 parser = argparse.ArgumentParser(
