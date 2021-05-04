@@ -129,11 +129,11 @@ class Watcher(Process):
                 )
                 if block_ver & (1 << 2):
                     LOG.info(
-                        f"Pool {self.purl.hostname} issued new work that SIGNALS ✅ for Taproot"
+                        f"Issued new work that SIGNALS ✅ for Taproot from {self.purl.hostname}"
                     )
                 else:
                     LOG.info(
-                        f"Pool {self.purl.hostname} issued new work that DOES NOT SIGNAL ❌ for Taproot"
+                        f"Issued new work that DOES NOT SIGNAL ❌ for Taproot from {self.purl.hostname}"
                     )
 
     def run(self):
