@@ -131,7 +131,10 @@ class Watcher(Process):
                     )
 
     def run(self):
-        self.get_stratum_work()
+        # If there is a socket exception, retry
+        while True:
+            self.get_stratum_work()
+            self.close()
 
 
 if __name__ == "__main__":
