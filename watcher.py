@@ -7,10 +7,7 @@ import logging
 import socket
 import sys
 
-from urllib.parse import urlparse
-
-ID = 0
-BUF = b""
+from urllib.parse import urlparse, urlunparse
 
 # Setup logging
 file_handler = logging.FileHandler(filename="stratum-watcher.log")
@@ -22,105 +19,115 @@ logging.basicConfig(
 LOG = logging.getLogger()
 
 
-def get_msg(sock):
-    global BUF
-    while True:
-        BUF += sock.recv(4096)
-        split_buf = BUF.split(b"\n", maxsplit=1)
-        r = split_buf[0]
+class Watcher:
+    def __init__(self, url, userpass):
+        self.buf = b""
+        self.id = 0
+        self.userpass = userpass
+
+        # Parse the URL
+        self.purl = urlparse(url)
+        if self.purl.scheme != "stratum+tcp":
+            raise ValueError(
+                f"Unrecognized scheme {self.purl.scheme}, only 'stratum+tcp' is allowed"
+            )
+        if self.purl.hostname is None:
+            raise ValueError(f"No hostname provided")
+        if self.purl.port is None:
+            raise ValueError(f"No port provided")
+        if self.purl.path != "":
+            raise ValueError(f"URL has a path {self.purl.path}, this is not valid")
+
+        # Make the socket
+        self.sock = socket.socket()
+
+        # Register the cleanup
+        atexit.register(self.close)
+
+    def close(self):
         try:
-            resp = json.loads(r)
-
-            # Remove r from the buffer
-            if len(split_buf) == 2:
-                BUF = split_buf[1]
-            else:
-                BUF = b""
-
-            # Decoded, so return this message
-            return resp
-        except:
-            # Failed to decode, maybe missing, so try to get more
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
             pass
+        self.sock.close()
+        LOG.info(f"Disconnected from {urlunparse(self.purl)}")
 
+    def get_msg(self):
+        while True:
+            self.buf += self.sock.recv(4096)
+            split_buf = self.buf.split(b"\n", maxsplit=1)
+            r = split_buf[0]
+            try:
+                resp = json.loads(r)
 
-def send_jsonrpc(sock, method, params):
-    # Build the jsonrpc request
-    global ID
-    data = {
-        "jsonrpc": "2.0",
-        "id": ID,
-        "method": method,
-        "params": params,
-    }
-    ID += 1
+                # Remove r from the buffer
+                if len(split_buf) == 2:
+                    self.buf = split_buf[1]
+                else:
+                    self.buf = b""
 
-    # Send the jsonrpc request
-    LOG.debug(f"Sending: {data}")
-    json_data = json.dumps(data) + "\n"
-    sock.send(json_data.encode())
+                # Decoded, so return this message
+                return resp
+            except:
+                # Failed to decode, maybe missing, so try to get more
+                pass
 
-    # Get the jsonrpc reqponse
-    resp = get_msg(sock)
-    LOG.debug(f"Received: {resp}")
+    def send_jsonrpc(self, method, params):
+        # Build the jsonrpc request
+        data = {
+            "jsonrpc": "2.0",
+            "id": self.id,
+            "method": method,
+            "params": params,
+        }
+        self.id += 1
 
+        # Send the jsonrpc request
+        LOG.debug(f"Sending: {data}")
+        json_data = json.dumps(data) + "\n"
+        self.sock.send(json_data.encode())
 
-def get_stratum_work(url, userpass):
-    # Parse the URL
-    parsed = urlparse(url)
-    if parsed.scheme != "stratum+tcp":
-        raise ValueError(
-            f"Unrecognized scheme {parsed.scheme}, only 'stratum+tcp' is allowed"
-        )
-    if parsed.hostname is None:
-        raise ValueError(f"No hostname provided")
-    if parsed.port is None:
-        raise ValueError(f"No port provided")
-    if parsed.path != "":
-        raise ValueError(f"URL has a path {parsed.path}, this is not valid")
+        # Get the jsonrpc reqponse
+        resp = self.get_msg()
+        LOG.debug(f"Received: {resp}")
 
-    # Open TCP connection to the server
-    stratum_sock = socket.socket()
-    stratum_sock.connect((parsed.hostname, parsed.port))
-    LOG.info(f"Connected to server {url}")
+    def get_stratum_work(self):
+        # Open TCP connection to the server
+        self.sock.connect((self.purl.hostname, self.purl.port))
+        LOG.info(f"Connected to server {urlunparse(self.purl)}")
 
-    # Make sure the socket is closed on exit
-    def cleanup_socket():
-        stratum_sock.close()
-        LOG.info(f"Disconnected from {url}")
+        # Subscribe to mining notifications
+        self.send_jsonrpc("mining.subscribe", ["StratumWatcher/0.1"])
+        LOG.debug(f"Subscribed to pool notifications")
 
-    atexit.register(cleanup_socket)
+        # Authorize with the pool
+        self.send_jsonrpc("mining.authorize", self.userpass.split(":"))
+        LOG.debug(f"Authed with the pool")
 
-    # Subscribe to mining notifications
-    send_jsonrpc(stratum_sock, "mining.subscribe", ["StratumWatcher/0.1"])
-    LOG.debug(f"Subscribed to pool notifications")
+        # Wait for notifications
+        while True:
+            try:
+                n = self.get_msg()
+            except Exception as e:
+                LOG.warning(f"Received exception for {parsed.hostname}: {e}")
+                break
+            LOG.debug(f"Received notification: {n}")
 
-    # Authorize with the pool
-    send_jsonrpc(stratum_sock, "mining.authorize", userpass.split(":"))
-    LOG.debug(f"Authed with the pool")
-
-    # Wait for notifications
-    while True:
-        try:
-            n = get_msg(stratum_sock)
-        except Exception as e:
-            LOG.warning(f"Received exception for {parsed.hostname}: {e}")
-            break
-        LOG.debug(f"Received notification: {n}")
-
-        # Check the notification for mining.notify
-        if "method" in n and n["method"] == "mining.notify":
-            # Check for taproot versionbits
-            block_ver_hex = n["params"][5]
-            block_ver = int.from_bytes(bytes.fromhex(block_ver_hex), byteorder="big")
-            if block_ver & (1 << 2):
-                LOG.info(
-                    f"Pool {parsed.hostname} issued new work that SIGNALS ✅ for Taproot"
+            # Check the notification for mining.notify
+            if "method" in n and n["method"] == "mining.notify":
+                # Check for taproot versionbits
+                block_ver_hex = n["params"][5]
+                block_ver = int.from_bytes(
+                    bytes.fromhex(block_ver_hex), byteorder="big"
                 )
-            else:
-                LOG.info(
-                    f"Pool {parsed.hostname} issued new work that DOES NOT SIGNAL ❌ for Taproot"
-                )
+                if block_ver & (1 << 2):
+                    LOG.info(
+                        f"Pool {self.purl.hostname} issued new work that SIGNALS ✅ for Taproot"
+                    )
+                else:
+                    LOG.info(
+                        f"Pool {self.purl.hostname} issued new work that DOES NOT SIGNAL ❌ for Taproot"
+                    )
 
 
 parser = argparse.ArgumentParser(
@@ -139,7 +146,9 @@ LOG.setLevel(loglevel)
 
 try:
     while True:
-        get_stratum_work(args.url, args.userpass)
+        w = Watcher(args.url, args.userpass)
+        w.get_stratum_work()
+        atexit.unregister(w.close)
 except KeyboardInterrupt:
     # When receiving a keyboard interrupt, do nothing and let atexit clean things up
     pass
