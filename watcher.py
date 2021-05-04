@@ -43,6 +43,7 @@ class Watcher(Process):
 
         # Make the socket
         self.sock = socket.socket()
+        self.sock.settimeout(600)
 
     def close(self):
         try:
