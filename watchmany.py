@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
 import argparse
-import subprocess
 import signal
+
+from watcher import Watcher
 
 POOLS = [
     ["stratum+tcp://us-east.stratum.slushpool.com:3333", "achow101.worker1:pass"],
@@ -30,18 +31,22 @@ args = parser.parse_args()
 
 procs = []
 
-# Start all of the scripts
-for pool in POOLS:
-    proc_args = ["python", "./watcher.py"]
-    if args.debug:
-        proc_args.append("--debug")
-    proc_args.extend(pool)
+# Handler for SIGINT that stops all of the processes
+def sigint_handler(signal, frame):
+    global procs
+    for p in procs:
+        p.close()
+        p.terminate()
 
-    proc = subprocess.Popen(proc_args)
+# Start all watcher processes
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+for pool in POOLS:
+    proc = Watcher(pool[0], pool[1], name=f"Watcher {pool[0]}")
+    proc.start()
     procs.append(proc)
 
-signal.signal(signal.SIGINT, signal.SIG_IGN)
+signal.signal(signal.SIGINT, sigint_handler)
 
 # Interrupt and wait for all of the processes to end
 for p in procs:
-    p.wait()
+    p.join()
