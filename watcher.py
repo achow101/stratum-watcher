@@ -41,9 +41,6 @@ class Watcher:
         # Make the socket
         self.sock = socket.socket()
 
-        # Register the cleanup
-        atexit.register(self.close)
-
     def close(self):
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -130,25 +127,27 @@ class Watcher:
                     )
 
 
-parser = argparse.ArgumentParser(
-    description="Subscribe to a Stratum and listen for new work"
-)
-parser.add_argument("url", help="The URL of the stratum server")
-parser.add_argument(
-    "userpass", help="Username and password combination separated by a colon (:)"
-)
-parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
-args = parser.parse_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Subscribe to a Stratum and listen for new work"
+    )
+    parser.add_argument("url", help="The URL of the stratum server")
+    parser.add_argument(
+        "userpass", help="Username and password combination separated by a colon (:)"
+    )
+    parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
+    args = parser.parse_args()
 
-# Set logging level
-loglevel = logging.DEBUG if args.debug else logging.INFO
-LOG.setLevel(loglevel)
+    # Set logging level
+    loglevel = logging.DEBUG if args.debug else logging.INFO
+    LOG.setLevel(loglevel)
 
-try:
-    while True:
-        w = Watcher(args.url, args.userpass)
-        w.get_stratum_work()
-        atexit.unregister(w.close)
-except KeyboardInterrupt:
-    # When receiving a keyboard interrupt, do nothing and let atexit clean things up
-    pass
+    try:
+        while True:
+            w = Watcher(args.url, args.userpass)
+            atexit.register(w.close)
+            w.get_stratum_work()
+            atexit.unregister(w.close)
+    except KeyboardInterrupt:
+        # When receiving a keyboard interrupt, do nothing and let atexit clean things up
+        pass
