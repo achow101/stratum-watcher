@@ -7,6 +7,7 @@ import logging
 import socket
 import sys
 
+from multiprocessing import Process
 from urllib.parse import urlparse, urlunparse
 
 # Setup logging
@@ -17,10 +18,12 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s: %(message)s",
 )
 LOG = logging.getLogger()
+LOG.setLevel(logging.INFO)
 
 
-class Watcher:
-    def __init__(self, url, userpass):
+class Watcher(Process):
+    def __init__(self, url, userpass, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.buf = b""
         self.id = 0
         self.userpass = userpass
@@ -65,7 +68,7 @@ class Watcher:
 
                 # Decoded, so return this message
                 return resp
-            except:
+            except json.JSONDecodeError:
                 # Failed to decode, maybe missing, so try to get more
                 pass
 
@@ -106,7 +109,7 @@ class Watcher:
             try:
                 n = self.get_msg()
             except Exception as e:
-                LOG.warning(f"Received exception for {parsed.hostname}: {e}")
+                LOG.warning(f"Received exception for {self.purl.hostname}: {e}")
                 break
             LOG.debug(f"Received notification: {n}")
 
@@ -125,6 +128,9 @@ class Watcher:
                     LOG.info(
                         f"Pool {self.purl.hostname} issued new work that DOES NOT SIGNAL ❌ for Taproot"
                     )
+
+    def run(self):
+        self.get_stratum_work()
 
 
 if __name__ == "__main__":
