@@ -68,6 +68,7 @@ def sigint_handler(signal, frame):
         p.close()
         p.terminate()
 
+
 # Start all watcher processes
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 for pool in POOLS:
