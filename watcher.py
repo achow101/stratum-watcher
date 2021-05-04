@@ -28,7 +28,7 @@ class Watcher(Process):
         self.buf = b""
         self.id = 0
         self.userpass = userpass
-        self.signals = False
+        self.signals = None
         self.last_log_time = time.time()
 
         # Parse the URL
@@ -131,7 +131,9 @@ class Watcher(Process):
                     bytes.fromhex(block_ver_hex), byteorder="big"
                 )
                 if block_ver & (1 << 2):
-                    if not self.signals:
+                    if self.signals is None:
+                        LOG.info(f"✅ Signaling initially: {self.purl.hostname}")
+                    elif not self.signals:
                         LOG.info(f"✅ Now signaling: {self.purl.hostname}")
                     elif time.time() - self.last_log_time > 300:
                         LOG.info(f"✅ Still signaling: {self.purl.hostname}")
@@ -141,7 +143,9 @@ class Watcher(Process):
                     self.signals = True
                     self.last_log_time = time.time()
                 else:
-                    if self.signals:
+                    if self.signals is None:
+                        LOG.info(f"❌ Not signaling initially: {self.purl.hostname}")
+                    elif self.signals:
                         LOG.info(f"❌ Stopped signaling: {self.purl.hostname}")
                     elif time.time() - self.last_log_time > 300:
                         LOG.info(f"❌ Still not signaling: {self.purl.hostname}")
