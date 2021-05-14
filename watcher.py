@@ -174,7 +174,10 @@ class Watcher(Process):
     def run(self):
         # If there is a socket exception, retry
         while True:
-            self.get_stratum_work()
+            try:
+                self.get_stratum_work()
+            except (ConnectionRefusedError, EOFError):
+                pass
             self.close()
             self.init_socket()
 
