@@ -57,7 +57,7 @@ class Watcher(Process):
         except OSError:
             pass
         self.sock.close()
-        LOG.info(f"Disconnected from {urlunparse(self.purl)}")
+        LOG.debug(f"Disconnected from {urlunparse(self.purl)}")
 
     def get_msg(self):
         while True:
