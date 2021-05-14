@@ -104,7 +104,7 @@ class Watcher(Process):
     def get_stratum_work(self):
         # Open TCP connection to the server
         self.sock.connect((self.purl.hostname, self.purl.port))
-        LOG.info(f"Connected to server {urlunparse(self.purl)}")
+        LOG.debug(f"Connected to server {urlunparse(self.purl)}")
 
         # Subscribe to mining notifications
         self.send_jsonrpc("mining.subscribe", ["StratumWatcher/0.1"])
@@ -119,7 +119,7 @@ class Watcher(Process):
             try:
                 n = self.get_msg()
             except Exception as e:
-                LOG.warning(f"Received exception for {self.purl.hostname}: {e}")
+                LOG.debug(f"Received exception for {self.purl.hostname}: {e}")
                 break
             LOG.debug(f"Received notification: {n}")
 
