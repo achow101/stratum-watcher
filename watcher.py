@@ -137,8 +137,20 @@ class Watcher(Process):
             # Check the notification for mining.notify
             if "method" in n and n["method"] == "mining.notify":
                 # Get the previous block hash
-                prev_bh_stratum = struct.unpack("<IIIIIIII", bytes.fromhex(n["params"][1]))
-                prev_bh = struct.pack("<IIIIIIII", prev_bh_stratum[7], prev_bh_stratum[6], prev_bh_stratum[5], prev_bh_stratum[4], prev_bh_stratum[3], prev_bh_stratum[2], prev_bh_stratum[1], prev_bh_stratum[0]).hex()
+                prev_bh_stratum = struct.unpack(
+                    "<IIIIIIII", bytes.fromhex(n["params"][1])
+                )
+                prev_bh = struct.pack(
+                    "<IIIIIIII",
+                    prev_bh_stratum[7],
+                    prev_bh_stratum[6],
+                    prev_bh_stratum[5],
+                    prev_bh_stratum[4],
+                    prev_bh_stratum[3],
+                    prev_bh_stratum[2],
+                    prev_bh_stratum[1],
+                    prev_bh_stratum[0],
+                ).hex()
 
                 # Check that this is Bitcoin
                 try:
@@ -214,7 +226,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
     parser.add_argument("--logfile", help="Log file to log to")
-    parser.add_argument("--rpccookiefile", help="Cookie file for Bitcoin Core RPC creds", default="~/.bitcoin/.cookie")
+    parser.add_argument(
+        "--rpccookiefile",
+        help="Cookie file for Bitcoin Core RPC creds",
+        default="~/.bitcoin/.cookie",
+    )
     args = parser.parse_args()
 
     # Set logging level

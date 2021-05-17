@@ -87,7 +87,11 @@ parser = argparse.ArgumentParser(
     description="Run the watcher.py script for multiple hardcoded pools"
 )
 parser.add_argument("--debug")
-parser.add_argument("--rpccookiefile", help="Cookie file for Bitcoin Core RPC creds", default="~/.bitcoin/.cookie")
+parser.add_argument(
+    "--rpccookiefile",
+    help="Cookie file for Bitcoin Core RPC creds",
+    default="~/.bitcoin/.cookie",
+)
 args = parser.parse_args()
 
 procs = []
