@@ -191,11 +191,18 @@ if __name__ == "__main__":
         "userpass", help="Username and password combination separated by a colon (:)"
     )
     parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
+    parser.add_argument("--logfile", help="Log file to log to")
     args = parser.parse_args()
 
     # Set logging level
     loglevel = logging.DEBUG if args.debug else logging.INFO
     LOG.setLevel(loglevel)
+
+    # Set the log file
+    if args.logfile is not None:
+        LOG.removeHandler(file_handler)
+        logfile_handler = logging.FileHandler(filename=args.logfile)
+        LOG.addHandler(logfile_handler)
 
     try:
         while True:
