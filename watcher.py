@@ -73,10 +73,6 @@ class Watcher(Process):
 
     def get_msg(self):
         while True:
-            new_buf = self.sock.recv(4096)
-            if len(new_buf) == 0:
-                raise EOFError("Socket EOF received")
-            self.buf += new_buf
             split_buf = self.buf.split(b"\n", maxsplit=1)
             r = split_buf[0]
             try:
@@ -92,7 +88,10 @@ class Watcher(Process):
                 return resp
             except json.JSONDecodeError:
                 # Failed to decode, maybe missing, so try to get more
-                pass
+                new_buf = self.sock.recv(4096)
+                if len(new_buf) == 0:
+                    raise EOFError("Socket EOF received")
+                self.buf += new_buf
 
     def send_jsonrpc(self, method, params):
         # Build the jsonrpc request
