@@ -4,10 +4,13 @@ import argparse
 import atexit
 import json
 import logging
+import os
 import socket
+import struct
 import sys
 import time
 
+from authproxy import AuthServiceProxy, JSONRPCException
 from multiprocessing import Process
 from urllib.parse import urlparse, urlunparse
 
@@ -23,7 +26,7 @@ LOG.setLevel(logging.INFO)
 
 
 class Watcher(Process):
-    def __init__(self, url, userpass, *args, **kwargs):
+    def __init__(self, url, userpass, rpccookiefile, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.buf = b""
         self.id = 0
@@ -43,6 +46,14 @@ class Watcher(Process):
             raise ValueError(f"No port provided")
         if self.purl.path != "":
             raise ValueError(f"URL has a path {self.purl.path}, this is not valid")
+
+        # Get the RPC cookie
+        cookie_filepath = os.path.abspath(os.path.expanduser(rpccookiefile))
+        with open(cookie_filepath, "r") as f:
+            self.rpc_userpass = f.readline()
+
+        # Open RPC connection
+        self.rpc = AuthServiceProxy(f"http://{self.rpc_userpass}@localhost:8332")
 
         self.init_socket()
 
@@ -125,6 +136,17 @@ class Watcher(Process):
 
             # Check the notification for mining.notify
             if "method" in n and n["method"] == "mining.notify":
+                # Get the previous block hash
+                prev_bh_stratum = struct.unpack("<IIIIIIII", bytes.fromhex(n["params"][1]))
+                prev_bh = struct.pack("<IIIIIIII", prev_bh_stratum[7], prev_bh_stratum[6], prev_bh_stratum[5], prev_bh_stratum[4], prev_bh_stratum[3], prev_bh_stratum[2], prev_bh_stratum[1], prev_bh_stratum[0]).hex()
+
+                # Check that this is Bitcoin
+                try:
+                    self.rpc.getblockheader(prev_bh)
+                except JSONRPCException:
+                    LOG.debug(f"Received non-Bitcoin work, ignoring")
+                    continue
+
                 # Check for taproot versionbits
                 block_ver_hex = n["params"][5]
                 block_ver = int.from_bytes(
@@ -192,6 +214,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--debug", help="Verbose debug logging", action="store_true")
     parser.add_argument("--logfile", help="Log file to log to")
+    parser.add_argument("--rpccookiefile", help="Cookie file for Bitcoin Core RPC creds", default="~/.bitcoin/.cookie")
     args = parser.parse_args()
 
     # Set logging level
@@ -206,7 +229,7 @@ if __name__ == "__main__":
 
     try:
         while True:
-            w = Watcher(args.url, args.userpass)
+            w = Watcher(args.url, args.userpass, args.rpccookiefile)
             atexit.register(w.close)
             w.get_stratum_work()
             atexit.unregister(w.close)

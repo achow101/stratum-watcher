@@ -87,6 +87,7 @@ parser = argparse.ArgumentParser(
     description="Run the watcher.py script for multiple hardcoded pools"
 )
 parser.add_argument("--debug")
+parser.add_argument("--rpccookiefile", help="Cookie file for Bitcoin Core RPC creds", default="~/.bitcoin/.cookie")
 args = parser.parse_args()
 
 procs = []
@@ -102,7 +103,7 @@ def sigint_handler(signal, frame):
 # Start all watcher processes
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 for pool in POOLS:
-    proc = Watcher(pool[0], pool[1], name=f"Watcher {pool[0]}")
+    proc = Watcher(pool[0], pool[1], args.rpccookiefile, name=f"Watcher {pool[0]}")
     proc.start()
     procs.append(proc)
 
