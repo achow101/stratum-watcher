@@ -54,6 +54,7 @@ class Watcher(Process):
 
         # Open RPC connection
         self.rpc = AuthServiceProxy(f"http://{self.rpc_userpass}@localhost:8332")
+        self.last_seen_blockhash = self.rpc.getbestblockhash()
 
         self.init_socket()
 
@@ -153,11 +154,14 @@ class Watcher(Process):
                 ).hex()
 
                 # Check that this is Bitcoin
-                try:
-                    self.rpc.getblockheader(prev_bh)
-                except JSONRPCException:
-                    LOG.debug(f"Received non-Bitcoin work, ignoring")
-                    continue
+                if prev_bh != self.last_seen_blockhash:
+                    # If the blockhash doesn't match what we've cached, ask bitcoind
+                    try:
+                        self.rpc.getblockheader(prev_bh)
+                        self.last_seen_blockhash = prev_bh
+                    except JSONRPCException:
+                        LOG.debug(f"Received non-Bitcoin work, ignoring")
+                        continue
 
                 # Check for taproot versionbits
                 block_ver_hex = n["params"][5]
