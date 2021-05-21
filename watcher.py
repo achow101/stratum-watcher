@@ -213,7 +213,7 @@ class Watcher(Process):
         while True:
             try:
                 self.get_stratum_work()
-            except (ConnectionRefusedError, EOFError):
+            except (ConnectionRefusedError, EOFError, socket.timeout):
                 pass
             self.close()
             self.init_socket()
