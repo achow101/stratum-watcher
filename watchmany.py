@@ -85,6 +85,16 @@ POOLS = [
     ["stratum+tcp://us.emcd.io:3333", "achow101.wentaproot:x"],
     ["stratum+tcp://ir.emcd.io:3333", "achow101.wentaproot:x"],
     ["stratum+tcp://kz.emcd.io:3333", "achow101.wentaproot:x"],
+    ["stratum+tcp://hb.ss.rawpool.com:443", "miner1.wentaproot:x"],
+    ["stratum+tcp://hb.ss.rawpool.com:1800", "miner1.wentaproot:x"],
+    ["stratum+tcp://hn.ss.rawpool.com:443", "miner1.wentaproot:x"],
+    ["stratum+tcp://hn.ss.rawpool.com:1800", "miner1.wentaproot:x"],
+    ["stratum+tcp://us.ss.rawpool.com:443", "miner1.wentaproot:x"],
+    ["stratum+tcp://us.ss.rawpool.com:1800", "miner1.wentaproot:x"],
+    ["stratum+tcp://eu.ss.rawpool.com:443", "miner1.wentaproot:x"],
+    ["stratum+tcp://eu.ss.rawpool.com:1800", "miner1.wentaproot:x"],
+    ["stratum+tcp://ru.ss.rawpool.com:443", "miner1.wentaproot:x"],
+    ["stratum+tcp://ru.ss.rawpool.com:1800", "miner1.wentaproot:x"],
 ]
 
 parser = argparse.ArgumentParser(
